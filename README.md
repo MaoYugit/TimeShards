@@ -4,7 +4,19 @@
 
 ## web 端
 
+```bash
+pnpm create vue @latest
+pnpm install 
+pnpm dev
+```
 
+**Router**
+
+**Pinia** 
+
+**Linter**
+
+**Prettier**
 
 ## Java 后端
 
