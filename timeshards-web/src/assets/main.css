@@ -16,6 +16,7 @@ html,
 body {
   width: 100%;
   height: 100%;
+  overflow: hidden;
   scroll-behavior: smooth; /* 全局平滑滚动 */
 }
 
