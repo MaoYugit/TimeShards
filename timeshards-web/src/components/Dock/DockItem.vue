@@ -15,7 +15,6 @@ const emit = defineEmits<{
 }>()
 
 const el = ref<HTMLElement | null>(null)
-const isBouncing = ref(false)
 
 const { left, top, width, height } = useElementBounding(el)
 
@@ -44,9 +43,6 @@ const itemStyle = computed(() => ({
 function handleClick() {
   if (props.disabled) return
   emit('click')
-  if (isBouncing.value) return
-  isBouncing.value = true
-  window.setTimeout(() => (isBouncing.value = false), 600)
 }
 </script>
 
@@ -55,7 +51,7 @@ function handleClick() {
     ref="el"
     class="dock-item"
     type="button"
-    :class="{ 'is-bouncing': isBouncing, 'is-active': !!active }"
+    :class="{ 'is-active': !!active }"
     :disabled="disabled"
     :aria-label="label"
     :data-label="label"
@@ -151,29 +147,6 @@ function handleClick() {
 .dock-item:focus-visible::after {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-/* Bounce */
-.is-bouncing {
-  animation: dock-bounce 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-}
-
-@keyframes dock-bounce {
-  0% {
-    transform: translateY(0);
-  }
-  20% {
-    transform: translateY(-26px);
-  }
-  50% {
-    transform: translateY(7px);
-  }
-  80% {
-    transform: translateY(-3px);
-  }
-  100% {
-    transform: translateY(0);
-  }
 }
 
 @media (max-width: 420px) {

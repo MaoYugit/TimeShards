@@ -24,6 +24,9 @@ const mouseY = ref(0)
 const dockEl = ref<HTMLElement | null>(null)
 const useMouseSource = ref(true) // desktop mouse by default
 const touchActive = ref(false)
+const touchHoverActive = ref(false)
+const touchStart = ref<{ x: number; y: number } | null>(null)
+const activePointerType = ref<PointerEvent['pointerType'] | null>(null)
 
 const isDark = ref(false)
 
@@ -60,25 +63,60 @@ function setFromClientPoint(clientX: number, clientY: number) {
 }
 
 function onDockPointerDown(e: PointerEvent) {
-  // On touch devices, simulate hover while finger is down/moving.
+  activePointerType.value = e.pointerType
+
+  // Mouse: use vueuse mouse source
+  if (e.pointerType === 'mouse') {
+    useMouseSource.value = true
+    return
+  }
+
+  // Touch/Pen: do NOT trigger hover on tap; only enable hover after a drag threshold.
   if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+    // Keep receiving pointermove even if finger leaves element
+    try {
+      dockEl.value?.setPointerCapture?.(e.pointerId)
+    } catch {
+      // ignore
+    }
     useMouseSource.value = false
     touchActive.value = true
-    setFromClientPoint(e.clientX, e.clientY)
+    touchHoverActive.value = false
+    touchStart.value = { x: e.clientX, y: e.clientY }
   }
 }
 
 function onDockPointerMove(e: PointerEvent) {
   if (!touchActive.value) return
+  if (!touchHoverActive.value) {
+    const start = touchStart.value
+    if (!start) return
+    const dx = e.clientX - start.x
+    const dy = e.clientY - start.y
+    const dist = Math.hypot(dx, dy)
+    if (dist < 8) return // tap jitter: ignore
+    touchHoverActive.value = true
+  }
   setFromClientPoint(e.clientX, e.clientY)
 }
 
 function onDockPointerUpOrCancel() {
   if (!touchActive.value) return
   touchActive.value = false
+  touchHoverActive.value = false
+  touchStart.value = null
   resetMouse()
-  // Restore desktop mouse updates when available
-  useMouseSource.value = true
+  try {
+    // releasePointerCapture is optional; safe-guard
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(dockEl.value as any)?.releasePointerCapture?.()
+  } catch {
+    // ignore
+  }
+  // IMPORTANT: on mobile, vueuse useMouse may keep last touch point.
+  // Keep useMouseSource disabled after tap, so we don't re-apply stale coords.
+  useMouseSource.value = activePointerType.value === 'mouse'
+  activePointerType.value = null
 }
 
 onMounted(() => {
@@ -132,7 +170,9 @@ function isActive(item: DockAction) {
 function onClick(item: DockAction) {
   if (item.type === 'action') item.onClick()
   else router.push(item.to)
-  resetMouse()
+  // Desktop: keep hover state until mouse leaves window.
+  // Touch: always reset on tap to avoid stuck magnification.
+  if (touchActive.value || !useMouseSource.value) resetMouse()
 }
 </script>
 
@@ -187,6 +227,7 @@ function onClick(item: DockAction) {
   padding: var(--dock-pad-y) var(--dock-pad-x);
   border-radius: 32px;
   overflow: visible;
+  touch-action: none;
 }
 
 .dock-container::before {
