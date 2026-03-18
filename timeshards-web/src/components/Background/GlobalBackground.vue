@@ -1,6 +1,6 @@
 <template>
   <div class="background-wrapper" aria-hidden="true">
-    <div ref="threeContainer" class="three-container"></div>
+    <!-- <div ref="threeContainer" class="three-container"></div> -->
     <vue-particles
       id="tsparticles"
       :options="particleOptions"
@@ -248,7 +248,7 @@ onBeforeUnmount(() => {
   height: 100%;
   z-index: -1;
   overflow: hidden;
-  background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+  background: radial-gradient(circle at center, var(--global-bg-center) 0%, var(--global-bg-edge) 100%);
   pointer-events: none;
 }
 

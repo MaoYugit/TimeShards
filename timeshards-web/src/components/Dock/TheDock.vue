@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMouse } from '@vueuse/core'
 import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useThemeStore } from '@/stores/theme'
 
 import DockItem from './DockItem.vue'
 import IconHome from './icons/IconHome.vue'
@@ -28,18 +30,12 @@ const touchHoverActive = ref(false)
 const touchStart = ref<{ x: number; y: number } | null>(null)
 const activePointerType = ref<PointerEvent['pointerType'] | null>(null)
 
-const isDark = ref(false)
+const themeStore = useThemeStore()
+const { isDark, preference } = storeToRefs(themeStore)
 
-function applyTheme(dark: boolean) {
-  const el = document.documentElement
-  if (dark) el.setAttribute('data-theme', 'dark')
-  else el.removeAttribute('data-theme')
-  isDark.value = dark
-  localStorage.setItem('timeshards-theme', dark ? 'dark' : 'light')
-}
-
-function toggleTheme() {
-  applyTheme(!isDark.value)
+function cycleTheme() {
+  const next = preference.value === 'light' ? 'dark' : preference.value === 'dark' ? 'system' : 'light'
+  themeStore.setPreference(next)
 }
 
 const resetMouse = () => {
@@ -127,16 +123,6 @@ onMounted(() => {
   window.addEventListener('touchend', onDockPointerUpOrCancel, { passive: true })
   window.addEventListener('touchcancel', onDockPointerUpOrCancel, { passive: true })
   document.addEventListener('visibilitychange', onVisibility)
-
-  const saved = localStorage.getItem('timeshards-theme')
-  if (saved === 'dark') applyTheme(true)
-  else if (saved === 'light') applyTheme(false)
-  else {
-    // default: follow current DOM or system preference
-    const domDark = document.documentElement.getAttribute('data-theme') === 'dark'
-    if (domDark) applyTheme(true)
-    else applyTheme(window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false)
-  }
 })
 
 onBeforeUnmount(() => {
@@ -157,7 +143,7 @@ const items = computed<DockAction[]>(() => [
   { type: 'route', label: '留言板', icon: IconGuestbook, to: '/guestbook' },
   { type: 'route', label: '对话页', icon: IconChat, to: '/chat' },
   { type: 'route', label: '简历页', icon: IconResume, to: '/resume' },
-  { type: 'action', label: '主题切换', icon: IconTheme, onClick: toggleTheme, isActive: () => false },
+  { type: 'action', label: '主题切换', icon: IconTheme, onClick: cycleTheme, isActive: () => false },
 ])
 
 function isActive(item: DockAction) {
@@ -196,7 +182,7 @@ function onClick(item: DockAction) {
         :active="isActive(item)"
         @click="onClick(item)"
       >
-        <component :is="item.icon" class="dock-icon" :isDark="isDark" />
+        <component :is="item.icon" class="dock-icon" :isDark="isDark" :preference="preference" />
       </DockItem>
     </div>
   </footer>

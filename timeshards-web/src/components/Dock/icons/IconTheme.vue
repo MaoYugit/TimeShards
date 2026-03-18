@@ -1,11 +1,36 @@
 <script setup lang="ts">
+import type { ThemePreference } from '@/stores/theme'
+
 defineProps<{
+  preference: ThemePreference
   isDark: boolean
 }>()
 </script>
 
 <template>
-  <svg v-if="isDark" viewBox="0 0 24 24" class="dock-svg" role="img" aria-label="切换到浅色模式">
+  <!-- A: system -->
+  <svg
+    v-if="preference === 'system'"
+    viewBox="0 0 24 24"
+    class="dock-svg"
+    role="img"
+    aria-label="跟随系统主题"
+  >
+    <path
+      d="M12 3.2 4.2 20.6h2.5l1.8-4.1h7.1l1.8 4.1h2.5L12 3.2Zm-2.6 11.1L12 7.8l2.6 6.5H9.4Z"
+      fill="currentColor"
+      opacity="0.92"
+    />
+  </svg>
+
+  <!-- sun: light (when currently dark, next is light) -->
+  <svg
+    v-else-if="isDark"
+    viewBox="0 0 24 24"
+    class="dock-svg"
+    role="img"
+    aria-label="切换到浅色模式"
+  >
     <!-- sun -->
     <path d="M12 7.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6Z" fill="currentColor" opacity="0.9" />
     <path

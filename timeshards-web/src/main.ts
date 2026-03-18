@@ -7,15 +7,19 @@ import App from './App.vue'
 import router from './router'
 
 import './assets/main.css'
+import { useThemeStore } from './stores/theme'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(router)
 VueParticles(app, {
   init: async (engine) => {
     await loadSlim(engine)
   },
 })
+
+useThemeStore(pinia).initTheme()
 
 app.mount('#app')

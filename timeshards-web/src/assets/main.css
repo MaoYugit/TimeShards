@@ -31,6 +31,8 @@ body {
   --text-primary: #1d1d1f;
   --text-secondary: #86868b;
   --accent-color: #0071e3;
+  --global-bg-center: #ffffff;
+  --global-bg-edge: #000000;
 
   /* 磨砂玻璃效果 */
   --glass-bg: rgba(255, 255, 255, 0.6);
@@ -51,6 +53,8 @@ body {
   --text-primary: #f5f5f7;
   --text-secondary: #a1a1a6;
   --accent-color: #0a84ff;
+  --global-bg-center: #373738;
+  --global-bg-edge: #000000;
 
   /* 磨砂玻璃效果（深色模式） */
   --glass-bg: rgba(28, 28, 30, 0.7);
