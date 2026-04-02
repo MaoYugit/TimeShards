@@ -194,7 +194,7 @@ function onClick(item: DockAction) {
   left: 50%;
   bottom: max(16px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 5000;
   padding: 0 12px;
   width: fit-content;
   max-width: calc(100% - 24px);

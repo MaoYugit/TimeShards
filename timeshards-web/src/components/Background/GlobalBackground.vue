@@ -246,7 +246,8 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  /* 勿用负 z-index：会落到 html/body 实色背景之下导致「背景没了」 */
+  z-index: 0;
   overflow: hidden;
   background: radial-gradient(circle at center, var(--global-bg-center) 0%, var(--global-bg-edge) 100%);
   pointer-events: none;

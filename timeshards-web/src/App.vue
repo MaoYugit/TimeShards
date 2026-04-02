@@ -26,6 +26,5 @@ body {
 
 .app-wrapper {
   background: transparent;
-  min-height: 100vh;
 }
 </style>

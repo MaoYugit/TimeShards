@@ -590,6 +590,13 @@ const calendarCells = computed<CalendarCell[]>(() => {
 }
 
 @media (max-width: 520px) {
+  /* 长页面从顶部排布，配合 .app-wrapper 纵向滚动，避免内容被「居中」在视口内裁切感 */
+  .home.page-container {
+    place-items: start stretch;
+    align-content: start;
+    padding-top: 10px;
+  }
+
   .top-grid {
     grid-template-columns: 1fr;
   }

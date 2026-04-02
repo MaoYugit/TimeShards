@@ -11,6 +11,11 @@ function applyToDom(mode: ThemeMode) {
   const el = document.documentElement
   if (mode === 'dark') el.setAttribute('data-theme', 'dark')
   else el.removeAttribute('data-theme')
+  // 手机浏览器地址栏/安全区底色，换肤更明显
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) {
+    meta.setAttribute('content', mode === 'dark' ? '#000000' : '#f5f5f7')
+  }
 }
 
 function getSystemPref(): ThemeMode {

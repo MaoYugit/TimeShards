@@ -16,12 +16,36 @@ html,
 body {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  scroll-behavior: smooth; /* 全局平滑滚动 */
+  overflow: hidden; /* 滚动交给 #app 内 .app-wrapper，避免 body 与内层双滚动条 */
+  scroll-behavior: smooth;
+}
+
+/* 主内容区可滚动（手机端首页等长页面）；Dock 为 fixed 不参与占位 */
+#app {
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  /* 勿用 overflow:hidden：会裁剪子级 position:fixed 的 Dock（各端底部栏消失） */
+  overflow: visible;
+}
+
+.app-wrapper {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* 全局 CSS 变量 */
 :root {
+  color-scheme: light;
   /* 基础字体 */
   --font-main: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
   --font-code: 'JetBrains Mono', monospace;
@@ -49,6 +73,7 @@ body {
 
 /* 深色模式  通过给 html 标签添加 data-theme="dark" 来切换 */
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg-color: #000000;
   --text-primary: #f5f5f7;
   --text-secondary: #a1a1a6;
@@ -67,10 +92,12 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   transition:
-    background-color 0.5s ease,
-    color 0.5s ease; /* 换肤时的平滑过渡 */
+    background-color 0.45s ease,
+    color 0.45s ease;
   overflow-x: hidden;
 }
+
+/* 勿给 html 铺实色：会盖住 z-index 低于根背景层的 fixed 背景（粒子/渐变） */
 
 /* 统一代码块样式 */
 code,
