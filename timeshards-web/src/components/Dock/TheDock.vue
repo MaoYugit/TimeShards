@@ -198,11 +198,14 @@ function onClick(item: DockAction) {
   padding: 0 12px;
   width: fit-content;
   max-width: calc(100% - 24px);
+  /* 仅占位条形容器接收点击，避免宽条区域挡住底部两侧的 FAB / 按钮 */
+  pointer-events: none;
 }
 
 .dock-container {
   position: relative;
   display: flex;
+  pointer-events: auto;
   align-items: flex-end;
   justify-content: center;
   gap: 12px;
