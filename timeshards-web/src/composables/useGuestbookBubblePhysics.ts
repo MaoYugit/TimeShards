@@ -20,10 +20,6 @@ function entryHash(id: string) {
   return h >>> 0
 }
 
-function zIndexFor(id: string) {
-  return 1 + (entryHash(id) % 10)
-}
-
 export function useGuestbookBubblePhysics(
   floatStageRef: Ref<HTMLElement | null>,
   sortedEntries: ComputedRef<GuestbookEntry[]>,
@@ -35,6 +31,7 @@ export function useGuestbookBubblePhysics(
   let lastNow = 0
   let running = false
   let resizeObs: ResizeObserver | null = null
+  let lastZOrderKey = ''
 
   function setBubbleRoot(id: string, el: unknown) {
     if (el instanceof HTMLElement) bubbleRoots[id] = el
@@ -56,24 +53,19 @@ export function useGuestbookBubblePhysics(
     }
 
     const missing = entries.filter((e) => !bodies[e.id])
-    const idxBase = entries.length - missing.length
-    missing.forEach((e, mi) => {
-      const i = idxBase + mi
-      const golden = Math.PI * (3 - Math.sqrt(5))
-      const theta = (i + 1) * golden
-      const r =
-        0.1 * Math.min(sw, sh) +
-        Math.sqrt((mi + 1) / Math.max(n, 1)) * 0.34 * Math.min(sw, sh)
+    missing.forEach((e) => {
       const h = entryHash(e.id)
+      const u1 = (h % 10000) / 10000
+      const u2 = ((h >>> 14) % 10000) / 10000
       bodies[e.id] = {
-        x: sw / 2 + Math.cos(theta) * r,
-        y: sh / 2 + Math.sin(theta) * r * 0.92,
+        x: 0.08 * sw + u1 * 0.84 * sw,
+        y: 0.12 * sh + u2 * 0.76 * sh,
         vx: 0,
         vy: 0,
         halfW: 88,
         halfH: 58,
         phase: (h % 628) / 100,
-        om: 0.32 + (h % 45) / 220,
+        om: (0.28 + (h % 45) / 260) * 0.72,
       }
     })
   }
@@ -117,65 +109,24 @@ export function useGuestbookBubblePhysics(
     }
   }
 
-  function resolvePairs(list: Body[]) {
-    for (let i = 0; i < list.length; i++) {
-      for (let j = i + 1; j < list.length; j++) {
-        const a = list[i]!
-        const b = list[j]!
-        const dx = b.x - a.x
-        const dy = b.y - a.y
-        const overlapX = a.halfW + b.halfW - Math.abs(dx)
-        const overlapY = a.halfH + b.halfH - Math.abs(dy)
-        if (overlapX <= 0 || overlapY <= 0) continue
-
-        const nx = dx >= 0 ? 1 : -1
-        const ny = dy >= 0 ? 1 : -1
-
-        if (overlapX < overlapY) {
-          const push = overlapX * 0.52 + 0.5
-          a.x -= nx * push * 0.5
-          b.x += nx * push * 0.5
-          const imp = Math.min(0.55, 0.09 + overlapX * 0.04)
-          a.vx -= nx * imp
-          b.vx += nx * imp
-        } else {
-          const push = overlapY * 0.52 + 0.5
-          a.y -= ny * push * 0.5
-          b.y += ny * push * 0.5
-          const imp = Math.min(0.55, 0.09 + overlapY * 0.04)
-          a.vy -= ny * imp
-          b.vy += ny * imp
+  function syncDOM(updateZ = false) {
+    const entries = sortedEntries.value
+    const topZ = entries.length + 100
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i]!
+      const el = bubbleRoots[e.id]
+      const p = bodies[e.id]
+      if (el && p) {
+        // transform 比 left/top 更少触发布局，动画更流畅
+        el.style.transform = `translate3d(${p.x - p.halfW}px, ${p.y - p.halfH}px, 0)`
+        if (updateZ) {
+          // sortedEntries 已按 createdAt 降序：越新越靠前 -> z-index 越高
+          el.style.zIndex = String(topZ - i)
+          el.style.willChange = 'transform'
         }
       }
     }
   }
-
-  function relaxStatic(iterations: number) {
-    const stage = floatStageRef.value
-    if (!stage) return
-    const sw = stage.clientWidth
-    const sh = stage.clientHeight
-    const list = sortedEntries.value.map((e) => bodies[e.id]).filter((b): b is Body => !!b)
-    for (let k = 0; k < iterations; k++) {
-      wallClamp(list, sw, sh)
-      resolvePairs(list)
-    }
-    wallClamp(list, sw, sh)
-  }
-
-  function syncDOM() {
-    for (const e of sortedEntries.value) {
-      const el = bubbleRoots[e.id]
-      const p = bodies[e.id]
-      if (el && p) {
-        el.style.left = `${p.x}px`
-        el.style.top = `${p.y}px`
-        el.style.zIndex = String(zIndexFor(e.id))
-      }
-    }
-  }
-
-  let measureTicker = 0
 
   function tick(now: number) {
     if (!running) return
@@ -195,24 +146,32 @@ export function useGuestbookBubblePhysics(
     const list = entries.map((e) => bodies[e.id]).filter((b): b is Body => !!b)
     if (list.length === 0) return
 
-    measureTicker++
-    if (measureTicker % 24 === 0) measureHalfSizes()
-
-    const drift = 0.11
+    /** 漂游强度（略低 = 更慢、更稳） */
+    const drift = 0.038
+    const moveScale = 26
     for (const p of list) {
-      p.vx += Math.sin(t * p.om + p.phase) * drift * dt * 60
-      p.vy += Math.cos(t * p.om * 0.88 + p.phase * 1.2) * drift * 0.9 * dt * 60
-      p.vx *= 0.987
-      p.vy *= 0.987
-      p.x += p.vx * dt * 52
-      p.y += p.vy * dt * 52
+      p.vx += Math.sin(t * p.om * 0.65 + p.phase) * drift * dt * 60
+      p.vy += Math.cos(t * p.om * 0.57 + p.phase * 1.2) * drift * 0.9 * dt * 60
+      p.vx *= 0.992
+      p.vy *= 0.992
+      p.x += p.vx * dt * moveScale
+      p.y += p.vy * dt * moveScale
+    }
+
+    /** 速度上限，保证观感轻柔 */
+    const maxSpeed = 1.45
+    for (const p of list) {
+      const sp = Math.hypot(p.vx, p.vy)
+      if (sp > maxSpeed) {
+        const k = maxSpeed / sp
+        p.vx *= k
+        p.vy *= k
+      }
     }
 
     wallClamp(list, sw, sh)
-    for (let k = 0; k < 5; k++) resolvePairs(list)
-    wallClamp(list, sw, sh)
 
-    syncDOM()
+    syncDOM(false)
   }
 
   function startLoop() {
@@ -234,7 +193,12 @@ export function useGuestbookBubblePhysics(
     if (!el) return
     resizeObs = new ResizeObserver(() => {
       measureHalfSizes()
-      relaxStatic(28)
+      const stage = floatStageRef.value
+      if (!stage) return
+      const sw = stage.clientWidth
+      const sh = stage.clientHeight
+      const list = sortedEntries.value.map((e) => bodies[e.id]).filter((b): b is Body => !!b)
+      wallClamp(list, sw, sh)
       syncDOM()
     })
     resizeObs.observe(el)
@@ -242,11 +206,19 @@ export function useGuestbookBubblePhysics(
 
   function layoutAndRelax() {
     ensureBodies()
+    const zOrderKey = sortedEntries.value.map((e) => e.id).join(',')
+    const needUpdateZ = zOrderKey !== lastZOrderKey
+    if (needUpdateZ) lastZOrderKey = zOrderKey
     nextTick(() => {
       requestAnimationFrame(() => {
         measureHalfSizes()
-        relaxStatic(60)
-        syncDOM()
+        const stage = floatStageRef.value
+        if (!stage) return
+        const sw = stage.clientWidth
+        const sh = stage.clientHeight
+        const list = sortedEntries.value.map((e) => bodies[e.id]).filter((b): b is Body => !!b)
+        wallClamp(list, sw, sh)
+        syncDOM(needUpdateZ)
       })
     })
   }

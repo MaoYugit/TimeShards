@@ -307,7 +307,7 @@ onBeforeUnmount(() => {
   max-width: 100%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  will-change: left, top;
+  will-change: transform;
 }
 
 .float-bubble {
