@@ -38,20 +38,31 @@ function goDetail(id: string) {
       <header class="hero">
         <p class="kicker">Blog</p>
         <h1 class="title">博客</h1>
-        <p class="lead">顶部分类切换、下方文章列表；支持按标题、标签、正文关键词搜索。</p>
       </header>
 
-      <div class="search-row card">
-        <label class="search-label" for="blog-search">搜索</label>
-        <input
-          id="blog-search"
-          v-model="searchQuery"
-          class="search-input"
-          type="search"
-          placeholder="标题 / 标签 / 正文…"
-          autocomplete="off"
-          enterkeyhint="search"
-        />
+      <div class="search-row" role="search">
+        <div class="search-shell">
+          <span class="search-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                stroke="currentColor"
+                stroke-width="1.75"
+              />
+              <path d="M16 16l4.2 4.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+            </svg>
+          </span>
+          <input
+            id="blog-search"
+            v-model="searchQuery"
+            class="search-input"
+            type="search"
+            placeholder="标题、标签或正文关键词…"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+          <label class="search-label" for="blog-search">搜索</label>
+        </div>
       </div>
 
       <nav class="category-nav card" aria-label="文章分类">
@@ -132,25 +143,40 @@ function goDetail(id: string) {
   text-shadow: 0 0 18px color-mix(in srgb, #00f3ff 18%, transparent);
 }
 
-.lead {
-  margin: 10px 0 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: color-mix(in srgb, var(--text-primary) 35%, var(--text-secondary));
+.search-row {
+  padding: 0;
 }
 
-.search-row {
+.search-shell {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 6px 0 14px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 90%, transparent);
+  background: color-mix(in srgb, var(--glass-bg) 55%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.search-label {
-  font-size: 13px;
-  color: var(--text-secondary);
+.search-shell:focus-within {
+  border-color: color-mix(in srgb, #00f3ff 42%, var(--glass-border));
+  background: color-mix(in srgb, var(--glass-bg) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+    0 0 0 1px color-mix(in srgb, #00f3ff 14%, transparent);
+}
+
+.search-icon {
   flex-shrink: 0;
+  display: flex;
+  color: color-mix(in srgb, var(--text-secondary) 88%, #00f3ff);
+  opacity: 0.92;
 }
 
 .search-input {
@@ -158,17 +184,31 @@ function goDetail(id: string) {
   min-width: 0;
   font: inherit;
   font-size: 14px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--glass-border) 88%, transparent);
-  background: color-mix(in srgb, var(--glass-bg) 60%, transparent);
+  line-height: 1.4;
+  padding: 11px 0;
+  border: none;
+  background: transparent;
   color: var(--text-primary);
+}
+
+.search-input::placeholder {
+  color: color-mix(in srgb, var(--text-secondary) 92%, transparent);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: color-mix(in srgb, #00f3ff 45%, var(--glass-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, #00f3ff 12%, transparent);
+}
+
+.search-label {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 14px 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--text-secondary) 96%, var(--text-primary));
+  border-left: 1px solid color-mix(in srgb, var(--glass-border) 92%, transparent);
+  user-select: none;
 }
 
 .card {
