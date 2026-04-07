@@ -8,7 +8,7 @@
 |------|------|
 | [Web 端开发文档](./web/README.md) | `timeshards-web` 技术架构、目录、构建运行、与页面级文档索引 |
 | [小程序端（占位）](./miniapp/README.md) | uni-app 等；待代码纳入后补全 |
-| [后端（占位）](./backend/README.md) | Java 等；待接口与运行说明补全 |
+| [后端（Express + MongoDB）](./backend/README.md) | `timeshards-backend` 与文档入口 |
 
 ## 仓库结构（概览）
 

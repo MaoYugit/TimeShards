@@ -12,7 +12,7 @@
 | [Dock 栏](docs/web/dock.md) | 底部导航与主题切换 |
 | [Web 页面索引](docs/web/pages/README.md) | 每个路由对应一份深度文档 |
 | [小程序（占位）](docs/miniapp/README.md) | 待补充 |
-| [后端（占位）](docs/backend/README.md) | 待补充 |
+| [**后端（Express + MongoDB）**](docs/backend/README.md) | `timeshards-backend` REST 与运行说明 |
 
 ## 仓库结构（概览）
 
@@ -20,7 +20,8 @@
 TimeShards/
 ├── docs/                    # 开发文档（按模块拆分）
 ├── timeshards-web/          # Web 前端（Vue 3 + Vite + Pinia）
-├── …                        # 小程序、后端等（以实际克隆结果为准）
+├── timeshards-backend/      # 自建后端（Express + MongoDB）
+├── …                        # 小程序等（以实际克隆结果为准）
 └── README.md
 ```
 
@@ -34,15 +35,26 @@ pnpm dev
 
 其他命令见 [`timeshards-web/README.md`](timeshards-web/README.md)（构建、`lint` 等）。
 
-**技术要点简述：** Vue Router、`Pinia`、Markdown（`marked`）、全局玻璃拟态 UI、底部 Dock 导航、全局动态背景；留言板与聊天室当前为浏览器 `localStorage` + 多标签同步（可选后续对接 `VITE_CHAT_WS_URL` 等）。
+**技术要点简述：** Vue Router、`Pinia`、Markdown（`marked`）、全局玻璃拟态 UI、底部 Dock 导航、全局动态背景；留言板与聊天室当前默认仍为浏览器 `localStorage`，可对接自建 API（见下）。
+
+## 自建后端（timeshards-backend）
+
+```bash
+cd timeshards-backend
+pnpm install
+cp .env.example .env
+pnpm dev
+```
+
+说明与接口列表：[timeshards-backend/README.md](timeshards-backend/README.md)；架构说明：[docs/backend/README.md](docs/backend/README.md)。前端对接需在 `timeshards-web` 中增加环境变量并改为 `fetch` 上述 REST（可逐步迁移）。
 
 ## 小程序端
 
 文档入口：[docs/miniapp/README.md](docs/miniapp/README.md)。项目路径与命令以仓库内实际目录为准。
 
-## Java 后端
+## 其他后端（如 Java）
 
-文档入口：[docs/backend/README.md](docs/backend/README.md)。模块与启动方式以仓库内实际代码为准。
+若仓库中另有 Java 等服务，请在 `docs/backend/` 下分文件说明，与 `timeshards-backend` 职责区分清楚。
 
 ## 许可与贡献
 
