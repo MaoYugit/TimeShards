@@ -1,48 +1,36 @@
-# .
+# TimeShards Web（timeshards-web）
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + TypeScript + Vite 单页应用，站点前台与（占位）管理端路由均在 `src/router`。
 
-## Recommended IDE Setup
+## 开发文档（仓库级）
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+完整说明见仓库根目录 **[`../docs/web/README.md`](../docs/web/README.md)**，包括：
 
-## Recommended Browser Setup
+- 技术栈、目录结构、路由与 Pinia Store
+- [全局背景](../docs/web/global-background.md)、[Dock](../docs/web/dock.md)
+- [每个页面的详细文档](../docs/web/pages/README.md)
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## 本地运行
 
 ```sh
 pnpm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 pnpm dev
 ```
 
-### Type-Check, Compile and Minify for Production
+## 构建与检查
 
 ```sh
 pnpm build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
 pnpm lint
 ```
+
+TypeScript / Vue 类型检查由构建与 IDE（Volar）配合完成；详见 Vite 官方文档。
+
+## 推荐环境
+
+- 编辑器：[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)（勿与旧版 Vetur 同时用于 Vue 3）
+- 浏览器：Chromium 系安装 [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 便于调试
+
+## 环境变量
+
+可选：`VITE_CHAT_WS_URL`（聊天室 WebSocket，未配置时使用本地存储方案）。类型见 `env.d.ts`。
