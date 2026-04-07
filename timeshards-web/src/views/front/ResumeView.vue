@@ -2,11 +2,11 @@
 import { computed } from 'vue'
 import resumeMd from '@/data/简历.md?raw'
 import resumePdfUrl from '@/data/简历.pdf?url'
-import { renderResumeMarkdown } from '@/utils/renderResumeMd'
+import { renderMarkdown } from '@/utils/renderMarkdown'
 
 const resumeHtml = computed(() => {
   const src = resumeMd.replace(/\.\/maoyu\.jpg/g, '/maoyu.jpg')
-  return renderResumeMarkdown(src)
+  return renderMarkdown(src)
 })
 </script>
 
