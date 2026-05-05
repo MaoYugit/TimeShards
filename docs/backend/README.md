@@ -477,12 +477,49 @@ $ curl -X POST http://localhost:3001/api/guestbook \
 
 **下一步**：Phase 5 — Portfolio 模块（作品集）
 
-### Phase 5：Portfolio 模块（待开发）
+### Phase 5：Portfolio 模块 ✅
 
-**计划内容**：
-- [ ] 作品集 Schema
-- [ ] CRUD 接口
-- [ ] 排序功能
+**完成日期**：2026-05-05
+
+**完成内容**：
+- [x] PortfolioProject Schema 设计（作品数据模型）
+- [x] CreatePortfolioDto、UpdatePortfolioDto
+- [x] Portfolio Service（CRUD + 排序）
+- [x] Portfolio Controller（5 个 API 端点）
+- [x] 支持嵌套对象数组（项目链接）
+
+**关键文件**：
+- `src/modules/portfolio/portfolio.module.ts` — Portfolio 模块定义
+- `src/modules/portfolio/portfolio.controller.ts` — 作品控制器
+- `src/modules/portfolio/portfolio.service.ts` — 作品服务
+- `src/modules/portfolio/schemas/portfolio-project.schema.ts` — 作品 Schema
+- `src/modules/portfolio/dto/create-portfolio.dto.ts` — 创建作品 DTO
+- `src/modules/portfolio/dto/update-portfolio.dto.ts` — 更新作品 DTO
+
+**API 端点**：
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/api/portfolio` | 否 | 获取作品列表 |
+| GET | `/api/portfolio/:id` | 否 | 获取作品详情 |
+| POST | `/api/portfolio` | JWT | 创建作品 |
+| PUT | `/api/portfolio/:id` | JWT | 更新作品 |
+| DELETE | `/api/portfolio/:id` | JWT | 删除作品 |
+
+**验证结果**：
+```bash
+# 获取作品列表
+$ curl http://localhost:3001/api/portfolio
+{"code":200,"data":[],"message":"success"}
+
+# 创建作品
+$ curl -X POST http://localhost:3001/api/portfolio \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"title":"TimeShards","period":"2024","summary":"个人博客系统","tags":["Vue","NestJS"],"sortOrder":1}'
+{"code":200,"data":{...},"message":"success"}
+```
+
+**下一步**：Phase 6 — Chat 模块（Socket.IO 实时通信）
 
 ### Phase 6：Chat 模块（待开发）
 

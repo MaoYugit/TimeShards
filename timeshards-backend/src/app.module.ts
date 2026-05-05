@@ -10,6 +10,7 @@ import { AppService } from "./app.service";
 import { AuthModule } from "./modules/auth/auth.module";
 import { BlogModule } from "./modules/blog/blog.module";
 import { GuestbookModule } from "./modules/guestbook/guestbook.module";
+import { PortfolioModule } from "./modules/portfolio/portfolio.module";
 
 @Module({
   imports: [
@@ -76,6 +77,9 @@ import { GuestbookModule } from "./modules/guestbook/guestbook.module";
 
     // Guestbook module
     GuestbookModule,
+
+    // Portfolio module
+    PortfolioModule,
   ],
   controllers: [AppController],
   providers: [
