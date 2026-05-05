@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useSiteAuthStore } from '@/stores/siteAuth'
-import { useChatRoomStore, avatarHueFromUserId } from '@/stores/chatRoom'
-import { getChatWsUrl } from '@/services/chatWs'
+import { getChatMessages, type ChatMessage } from '@/api/chat'
 
-const auth = useSiteAuthStore()
-const chat = useChatRoomStore()
-const { user, isAuthenticated } = storeToRefs(auth)
-const { messages } = storeToRefs(chat)
+const messages = ref<ChatMessage[]>([])
+const loading = ref(false)
 
 const nicknameInput = ref('')
 const loginError = ref('')
@@ -16,23 +11,21 @@ const draft = ref('')
 const sendError = ref('')
 const listEl = ref<HTMLElement | null>(null)
 
-let offChatTab: (() => void) | null = null
-let offAuthTab: (() => void) | null = null
+const isAuthenticated = ref(false)
+const currentUser = ref<{ userId: string; nickname: string } | null>(null)
 
-const wsHint = getChatWsUrl()
-
-const selfHue = computed(() => (user.value ? avatarHueFromUserId(user.value.id) : 0))
-
-onMounted(() => {
-  offChatTab = chat.initCrossTab()
-  offAuthTab = auth.initCrossTab()
-  scrollToBottom()
-})
-
-onBeforeUnmount(() => {
-  offChatTab?.()
-  offAuthTab?.()
-})
+// 获取历史消息
+async function fetchMessages() {
+  loading.value = true
+  try {
+    const res = await getChatMessages({ limit: 100 })
+    messages.value = res.data.items
+  } catch (error) {
+    console.error('获取消息失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 watch(
   () => messages.value.length,
@@ -41,6 +34,10 @@ watch(
     scrollToBottom()
   },
 )
+
+onMounted(() => {
+  fetchMessages()
+})
 
 function scrollToBottom() {
   const el = listEl.value
@@ -54,23 +51,41 @@ function initials(nick: string) {
   return s.length > 1 ? s.slice(0, 2) : s.slice(0, 1)
 }
 
-function formatTime(ts: number) {
+function formatTime(date: string) {
   return new Intl.DateTimeFormat('zh-CN', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(new Date(ts))
+  }).format(new Date(date))
+}
+
+function avatarHueFromUserId(userId: string) {
+  let hash = 0
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return Math.abs(hash) % 360
 }
 
 function tryLogin() {
   loginError.value = ''
-  const ok = auth.login(nicknameInput.value)
-  if (!ok) loginError.value = '昵称需 2～24 个字符'
+  const nick = nicknameInput.value.trim()
+  if (nick.length < 2 || nick.length > 24) {
+    loginError.value = '昵称需 2～24 个字符'
+    return
+  }
+  
+  // 生成随机 userId
+  const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
+  
+  currentUser.value = { userId, nickname: nick }
+  isAuthenticated.value = true
 }
 
 function logout() {
-  auth.logout()
+  isAuthenticated.value = false
+  currentUser.value = null
   nicknameInput.value = ''
 }
 
@@ -89,12 +104,24 @@ function onComposerKeydown(e: KeyboardEvent) {
   send()
 }
 
-function send() {
-  if (!user.value) return
+async function send() {
+  if (!currentUser.value || !draft.value.trim()) return
   sendError.value = ''
-  const ok = chat.send(user.value.id, user.value.nickname, draft.value)
-  if (ok) draft.value = ''
-  else sendError.value = '发送失败（可能无法写入本地存储）'
+  
+  // 注意：这里只是本地演示，实际需要对接 WebSocket
+  // 添加到本地消息列表
+  const newMessage: ChatMessage = {
+    _id: 'local_' + Date.now(),
+    userId: currentUser.value.userId,
+    nickname: currentUser.value.nickname,
+    avatarHue: avatarHueFromUserId(currentUser.value.userId),
+    text: draft.value.trim(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  
+  messages.value.push(newMessage)
+  draft.value = ''
 }
 </script>
 
@@ -105,14 +132,14 @@ function send() {
         <p class="kicker">Chat</p>
         <h1 class="title">公共聊天室</h1>
         <p class="lead">
-          登录后即可在群组中发言。当前为前端演示：消息保存在本机，多标签页可实时同步；接入后端 WebSocket 后可全站互通。
+          登录后即可在群组中发言。消息从后端获取，新消息需对接 WebSocket 实时推送。
         </p>
       </header>
 
       <!-- 未登录 -->
       <section v-if="!isAuthenticated" class="card gate-card" aria-label="进入聊天室">
         <h2 class="card-title">以昵称加入</h2>
-        <p class="hint">无需密码，仅用于在本机会话中标识你；请勿使用真实敏感信息。</p>
+        <p class="hint">无需密码，仅用于在聊天室中标识你；请勿使用真实敏感信息。</p>
         <label class="field">
           <span class="label">昵称</span>
           <input
@@ -137,23 +164,24 @@ function send() {
               <span
                 class="avatar sm"
                 :style="{
-                  background: `linear-gradient(135deg, hsl(${selfHue}, 58%, 46%), hsl(${selfHue}, 70%, 36%))`,
+                  background: `linear-gradient(135deg, hsl(${avatarHueFromUserId(currentUser?.userId || '')}, 58%, 46%), hsl(${avatarHueFromUserId(currentUser?.userId || '')}, 70%, 36%))`,
                 }"
               >
-                {{ user ? initials(user.nickname) : '?' }}
+                {{ currentUser ? initials(currentUser.nickname) : '?' }}
               </span>
-              <span class="nick">{{ user?.nickname }}</span>
+              <span class="nick">{{ currentUser?.nickname }}</span>
             </div>
             <button type="button" class="btn-ghost" @click="logout">退出</button>
           </div>
 
           <div ref="listEl" class="msg-list" role="log" aria-live="polite" aria-relevant="additions">
-            <p v-if="!messages.length" class="empty-room">暂无消息，打个招呼吧。</p>
+            <p v-if="loading" class="empty-room">加载中...</p>
+            <p v-else-if="!messages.length" class="empty-room">暂无消息，打个招呼吧。</p>
             <div
               v-for="m in messages"
-              :key="m.id"
+              :key="m._id"
               class="msg"
-              :class="{ self: user != null && m.userId === user.id }"
+              :class="{ self: currentUser != null && m.userId === currentUser.userId }"
             >
               <div
                 class="avatar"
@@ -193,8 +221,7 @@ function send() {
       </template>
 
       <p class="foot-note">
-        <template v-if="wsHint"> 已配置 WebSocket 地址，可在后续版本中对接服务端协议。 </template>
-        <template v-else> 未配置 <code class="code">VITE_CHAT_WS_URL</code> 时仅为本地演示同步。 </template>
+        消息从后端 API 获取历史记录，实时消息需对接 WebSocket。
       </p>
     </div>
   </main>

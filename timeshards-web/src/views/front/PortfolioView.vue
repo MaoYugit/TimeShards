@@ -1,19 +1,35 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { portfolioProjects, type PortfolioProject } from '@/data/portfolio'
+import { getPortfolioProjects, type PortfolioProject } from '@/api/portfolio'
+
+const projects = ref<PortfolioProject[]>([])
+const loading = ref(false)
 
 const isOpen = ref(false)
 /** 0 = 目录跨页；1..n = 第 n 个项目 */
 const spreadIndex = ref(0)
 
-const projectCount = computed(() => portfolioProjects.length)
+const projectCount = computed(() => projects.value.length)
 const spreadCount = computed(() => 1 + projectCount.value)
 
 const currentProject = computed<PortfolioProject | null>(() => {
   const i = spreadIndex.value
   if (i < 1) return null
-  return portfolioProjects[i - 1] ?? null
+  return projects.value[i - 1] ?? null
 })
+
+// 获取作品列表
+async function fetchProjects() {
+  loading.value = true
+  try {
+    const res = await getPortfolioProjects()
+    projects.value = res.data
+  } catch (error) {
+    console.error('获取作品列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 /** 桌面端：左/右页点击翻页；窄屏用手势 */
 const prefersPageClick = ref(true)
@@ -221,6 +237,7 @@ onMounted(() => {
   mq = window.matchMedia('(min-width: 721px)')
   syncPageClickMode()
   mq.addEventListener('change', syncPageClickMode)
+  fetchProjects()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
@@ -352,7 +369,7 @@ function linkRel(href: string) {
                     <h2 class="toc-title">目录</h2>
                     <p class="toc-lead">点击条目跳转到对应跨页</p>
                     <ol class="toc-list">
-                      <li v-for="(p, i) in portfolioProjects" :key="p.id" class="toc-item">
+                      <li v-for="(p, i) in projects" :key="p._id" class="toc-item">
                         <button type="button" class="toc-btn" @click="goToProjectSpread(i)">
                           <span class="toc-num">{{ String(i + 1).padStart(2, '0') }}</span>
                           <span class="toc-label">{{ p.title }}</span>

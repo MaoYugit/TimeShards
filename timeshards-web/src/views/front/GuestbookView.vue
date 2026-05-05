@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useGuestbookStore, type GuestbookEntry } from '@/stores/guestbook'
-import { useGuestbookBubblePhysics } from '@/composables/useGuestbookBubblePhysics'
+import { getGuestbookEntries, createGuestbookEntry, type GuestbookEntry } from '@/api/guestbook'
 
-const gb = useGuestbookStore()
-const { entries } = storeToRefs(gb)
+const entries = ref<GuestbookEntry[]>([])
+const loading = ref(false)
 
 const name = ref('')
 const email = ref('')
@@ -17,24 +15,31 @@ const showModal = ref(false)
 const nameInputRef = ref<HTMLInputElement | null>(null)
 const floatStageRef = ref<HTMLElement | null>(null)
 
-let offCrossTab: (() => void) | null = null
+const sortedEntries = computed(() => [...entries.value].sort((a, b) => 
+  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+))
 
-onMounted(() => {
-  offCrossTab = gb.initCrossTab()
-})
+// 获取留言列表
+async function fetchEntries() {
+  loading.value = true
+  try {
+    const res = await getGuestbookEntries({ page: 1, pageSize: 100 })
+    entries.value = res.data.items
+  } catch (error) {
+    console.error('获取留言列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
-const sortedEntries = computed(() => [...entries.value].sort((a, b) => b.createdAt - a.createdAt))
-
-const { setBubbleRoot } = useGuestbookBubblePhysics(floatStageRef, sortedEntries)
-
-function formatTime(ts: number) {
+function formatTime(date: string) {
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(new Date(ts))
+  }).format(new Date(date))
 }
 
 function normalizeWebsite(w: string) {
@@ -55,7 +60,7 @@ function bubbleHint(e: GuestbookEntry) {
   return normalizeWebsite(e.website) ? `访问 ${e.name} 的个人网站` : '未填写个人网站，无法跳转'
 }
 
-function onSubmit() {
+async function onSubmit() {
   submitError.value = ''
   submitted.value = false
   const n = name.value.trim()
@@ -73,25 +78,31 @@ function onSubmit() {
     submitError.value = '邮箱格式不太对'
     return
   }
-  const saved = gb.add({
-    name: n,
-    email: em,
-    website: website.value.trim(),
-    content: c,
-  })
-  if (!saved) {
-    submitError.value = '无法保存（例如浏览器禁止本地存储），请检查隐私模式或存储权限'
-    return
+  
+  try {
+    await createGuestbookEntry({
+      name: n,
+      email: em || undefined,
+      website: website.value.trim() || undefined,
+      content: c,
+    })
+    
+    name.value = ''
+    email.value = ''
+    website.value = ''
+    content.value = ''
+    submitted.value = true
+    
+    // 刷新留言列表
+    await fetchEntries()
+    
+    window.setTimeout(() => {
+      showModal.value = false
+      submitted.value = false
+    }, 1200)
+  } catch (error: any) {
+    submitError.value = error.message || '提交失败，请稍后重试'
   }
-  name.value = ''
-  email.value = ''
-  website.value = ''
-  content.value = ''
-  submitted.value = true
-  window.setTimeout(() => {
-    showModal.value = false
-    submitted.value = false
-  }, 1200)
 }
 
 function closeModal() {
@@ -124,8 +135,11 @@ watch(showModal, (open) => {
   }
 })
 
+onMounted(() => {
+  fetchEntries()
+})
+
 onBeforeUnmount(() => {
-  offCrossTab?.()
   window.removeEventListener('keydown', onGlobalKeydown)
   document.documentElement.style.overflow = ''
 })
@@ -144,12 +158,16 @@ onBeforeUnmount(() => {
     </div>
 
     <div ref="floatStageRef" class="float-stage" aria-label="留言漂浮展示">
-      <p v-if="!sortedEntries.length" class="empty-float">还没有留言，点右下角「我要留言」做第一个吧。</p>
+      <p v-if="loading" class="empty-float">加载中...</p>
+      <p v-else-if="!sortedEntries.length" class="empty-float">还没有留言，点右下角「我要留言」做第一个吧。</p>
       <div
         v-for="e in sortedEntries"
-        :key="e.id"
+        :key="e._id"
         class="float-anchor"
-        :ref="(el) => setBubbleRoot(e.id, el)"
+        :style="{
+          left: `${Math.random() * 80 + 10}%`,
+          top: `${Math.random() * 80 + 10}%`,
+        }"
       >
         <button
           type="button"
