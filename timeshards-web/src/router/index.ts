@@ -46,26 +46,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '简历' },
   },
 
-  // 管理后台页面
-  {
-    path: '/login',
-    name: 'login',
-    component: () => import('../views/admin/LoginView.vue'),
-    meta: { title: '登录' },
-  },
-  {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: () => import('../views/admin/DashboardView.vue'),
-    meta: { title: '数据面板' },
-  },
-  {
-    path: '/post-management',
-    name: 'post-management',
-    component: () => import('../views/admin/PostManagementView.vue'),
-    meta: { title: '博客管理' },
-  },
-
   // 404 页面
   {
     path: '/:pathMatch(.*)*',
