@@ -29,6 +29,19 @@ function handleMenuSelect() {
     appStore.toggleSidebar();
   }
 }
+
+// 路径拼接函数，处理多余斜杠
+const resolvePath = (parentPath: string, childPath: string) => {
+  if (childPath.startsWith("/")) return childPath;
+
+  // 如果父路径就是 '/'，直接拼接
+  if (parentPath === "/") {
+    return `/${childPath}`;
+  }
+
+  // 否则，确保中间只有一个斜杠
+  return `${parentPath}/${childPath}`.replace(/\/+/g, "/");
+};
 </script>
 
 <template>
@@ -56,11 +69,7 @@ function handleMenuSelect() {
           <!-- 单个菜单项（只有一个子路由） -->
           <el-menu-item
             v-if="route.children && route.children.length === 1"
-            :index="
-              route.children[0].path.startsWith('/')
-                ? route.children[0].path
-                : `${route.path}/${route.children[0].path}`
-            "
+            :index="resolvePath(route.path, route.children[0].path)"
           >
             <el-icon v-if="route.children[0].meta?.icon">
               <component :is="route.children[0].meta.icon" />
@@ -82,11 +91,7 @@ function handleMenuSelect() {
             <el-menu-item
               v-for="child in route.children"
               :key="child.path"
-              :index="
-                child.path.startsWith('/')
-                  ? child.path
-                  : `${route.path}/${child.path}`
-              "
+              :index="resolvePath(route.path, child.path)"
             >
               <el-icon v-if="child.meta?.icon">
                 <component :is="child.meta.icon" />

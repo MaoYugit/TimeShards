@@ -1,14 +1,45 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/store/app'
-import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
 const route = useRoute()
+const router = useRouter()
+
+// 用户名
+const username = computed(() => authStore.userInfo?.username || 'Admin')
 
 // 面包屑
-const breadcrumbs = [
-  { title: route.meta?.title as string || '首页' }
-]
+const breadcrumbs = computed(() => {
+  const title = route.meta?.title as string
+  return title ? [{ title }] : []
+})
+
+// 退出登录
+async function handleLogout() {
+  try {
+    await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    authStore.logout()
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  } catch {
+    // 取消操作
+  }
+}
+
+// 跳转个人信息
+function handleProfile() {
+  router.push('/system/profile')
+}
 </script>
 
 <template>
@@ -39,16 +70,16 @@ const breadcrumbs = [
       </div>
 
       <!-- 用户信息 -->
-      <el-dropdown trigger="click">
+      <el-dropdown trigger="click" @command="(cmd: string) => cmd === 'logout' ? handleLogout() : handleProfile()">
         <div class="user-info">
-          <el-avatar :size="30" src="" icon="UserFilled" />
-          <span class="user-name">Admin</span>
+          <el-avatar :size="30" icon="UserFilled" />
+          <span class="user-name">{{ username }}</span>
           <el-icon class="el-icon--right"><ArrowDown /></el-icon>
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item icon="User">个人信息</el-dropdown-item>
-            <el-dropdown-item divided icon="SwitchButton">退出登录</el-dropdown-item>
+            <el-dropdown-item icon="User" command="profile">个人信息</el-dropdown-item>
+            <el-dropdown-item divided icon="SwitchButton" command="logout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>

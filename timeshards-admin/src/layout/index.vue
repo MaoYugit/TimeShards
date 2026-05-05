@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/store/app'
+import { useAuthStore } from '@/store/auth'
 import Sidebar from './components/Sidebar.vue'
 import Navbar from './components/Navbar.vue'
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
 
 // 监听窗口大小变化
 function handleResize() {
@@ -12,9 +14,22 @@ function handleResize() {
   appStore.setMobile(width < 768)
 }
 
+// 初始化用户信息
+async function initUserInfo() {
+  if (authStore.isLoggedIn() && !authStore.userInfo) {
+    try {
+      await authStore.fetchUserInfo()
+    } catch {
+      // 获取用户信息失败，可能 token 已过期
+      authStore.logout()
+    }
+  }
+}
+
 onMounted(() => {
   handleResize()
   window.addEventListener('resize', handleResize)
+  initUserInfo()
 })
 
 onUnmounted(() => {

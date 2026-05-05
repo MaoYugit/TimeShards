@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useAuthStore } from '@/store/auth'
 
 const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
 const loading = ref(false)
+const formRef = ref()
 
 const form = reactive({
   username: '',
@@ -13,18 +17,33 @@ const form = reactive({
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+  ]
 }
 
 async function handleLogin() {
+  try {
+    await formRef.value?.validate()
+  } catch {
+    return
+  }
+
   loading.value = true
   try {
-    // TODO: 调用登录接口
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await authStore.login(form.username, form.password)
+    
+    // 获取用户信息
+    await authStore.fetchUserInfo()
+    
     ElMessage.success('登录成功')
-    router.push('/')
-  } catch (error) {
-    ElMessage.error('登录失败')
+    
+    // 跳转到之前的页面或首页
+    const redirect = (route.query.redirect as string) || '/'
+    router.push(redirect)
+  } catch (error: any) {
+    ElMessage.error(error.message || '登录失败')
   } finally {
     loading.value = false
   }
@@ -35,19 +54,46 @@ async function handleLogin() {
   <div class="login-container">
     <el-card class="login-card" shadow="always">
       <template #header>
-        <h2 class="login-title">TimeShards Admin</h2>
+        <div class="login-header">
+          <h2 class="login-title">TimeShards Admin</h2>
+          <p class="login-subtitle">后台管理系统</p>
+        </div>
       </template>
       
-      <el-form :model="form" :rules="rules" label-width="0" size="large">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="0"
+        size="large"
+        @keyup.enter="handleLogin"
+      >
         <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="用户名" prefix-icon="User" />
+          <el-input
+            v-model="form.username"
+            placeholder="请输入用户名"
+            prefix-icon="User"
+          />
         </el-form-item>
+        
         <el-form-item prop="password">
-          <el-input v-model="form.password" placeholder="密码" type="password" prefix-icon="Lock" show-password />
+          <el-input
+            v-model="form.password"
+            placeholder="请输入密码"
+            type="password"
+            prefix-icon="Lock"
+            show-password
+          />
         </el-form-item>
+        
         <el-form-item>
-          <el-button type="primary" :loading="loading" style="width: 100%" @click="handleLogin">
-            登录
+          <el-button
+            type="primary"
+            :loading="loading"
+            style="width: 100%"
+            @click="handleLogin"
+          >
+            {{ loading ? '登录中...' : '登录' }}
           </el-button>
         </el-form-item>
       </el-form>
@@ -73,9 +119,19 @@ async function handleLogin() {
   }
 }
 
-.login-title {
+.login-header {
   text-align: center;
-  margin: 0;
+}
+
+.login-title {
+  margin: 0 0 8px;
   color: #303133;
+  font-size: 24px;
+}
+
+.login-subtitle {
+  margin: 0;
+  color: #909399;
+  font-size: 14px;
 }
 </style>
