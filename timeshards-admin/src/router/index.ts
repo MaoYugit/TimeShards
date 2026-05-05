@@ -47,6 +47,18 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "文章管理", icon: "Notebook" },
       },
       {
+        path: "posts/create",
+        name: "PostCreate",
+        component: () => import("@/views/content/post-editor.vue"),
+        meta: { title: "新建文章", hidden: true },
+      },
+      {
+        path: "posts/edit/:id",
+        name: "PostEdit",
+        component: () => import("@/views/content/post-editor.vue"),
+        meta: { title: "编辑文章", hidden: true },
+      },
+      {
         path: "portfolio",
         name: "Portfolio",
         component: () => import("@/views/content/portfolio.vue"),

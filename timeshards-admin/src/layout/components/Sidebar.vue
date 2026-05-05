@@ -59,7 +59,7 @@ function handleMenuSelect() {
             :index="
               route.children[0].path.startsWith('/')
                 ? route.children[0].path
-                : `/${route.path}/${route.children[0].path}`
+                : `${route.path}/${route.children[0].path}`
             "
           >
             <el-icon v-if="route.children[0].meta?.icon">
