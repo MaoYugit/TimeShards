@@ -11,6 +11,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { BlogModule } from "./modules/blog/blog.module";
 import { GuestbookModule } from "./modules/guestbook/guestbook.module";
 import { PortfolioModule } from "./modules/portfolio/portfolio.module";
+import { ChatModule } from "./modules/chat/chat.module";
 
 @Module({
   imports: [
@@ -80,6 +81,9 @@ import { PortfolioModule } from "./modules/portfolio/portfolio.module";
 
     // Portfolio module
     PortfolioModule,
+
+    // Chat module
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
