@@ -435,14 +435,47 @@ $ curl http://localhost:3001/api/posts
 
 **下一步**：Phase 4 — Guestbook 模块（留言板）
 
-### Phase 4：Guestbook 模块（待开发）
+### Phase 4：Guestbook 模块 ✅
 
-**计划内容**：
-- [ ] 留言 Schema
-- [ ] 提交留言接口
-- [ ] 留言列表接口
-- [ ] 管理员删除接口
-- [ ] 速率限制
+**完成日期**：2026-05-05
+
+**完成内容**：
+- [x] GuestbookEntry Schema 设计（留言数据模型）
+- [x] CreateGuestbookDto、QueryGuestbookDto
+- [x] Guestbook Service（创建、列表、删除）
+- [x] Guestbook Controller（3 个 API 端点）
+- [x] 速率限制防刷（每分钟最多 3 条）
+- [x] 记录 IP 和 User-Agent
+
+**关键文件**：
+- `src/modules/guestbook/guestbook.module.ts` — Guestbook 模块定义
+- `src/modules/guestbook/guestbook.controller.ts` — 留言控制器
+- `src/modules/guestbook/guestbook.service.ts` — 留言服务
+- `src/modules/guestbook/schemas/guestbook-entry.schema.ts` — 留言 Schema
+- `src/modules/guestbook/dto/create-guestbook.dto.ts` — 创建留言 DTO
+- `src/modules/guestbook/dto/query-guestbook.dto.ts` — 查询留言 DTO
+
+**API 端点**：
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/api/guestbook` | 否 | 获取留言列表 |
+| POST | `/api/guestbook` | 否 | 提交留言（限流） |
+| DELETE | `/api/guestbook/:id` | JWT | 删除留言 |
+
+**验证结果**：
+```bash
+# 获取留言列表
+$ curl http://localhost:3001/api/guestbook
+{"code":200,"data":{"items":[],"total":0,"page":1,"pageSize":10,"totalPages":0},"message":"success"}
+
+# 提交留言
+$ curl -X POST http://localhost:3001/api/guestbook \
+  -H "Content-Type: application/json" \
+  -d '{"name":"测试用户","content":"这是一条测试留言"}'
+{"code":200,"data":{"name":"测试用户","content":"这是一条测试留言","_id":"...","createdAt":"..."},"message":"success"}
+```
+
+**下一步**：Phase 5 — Portfolio 模块（作品集）
 
 ### Phase 5：Portfolio 模块（待开发）
 
