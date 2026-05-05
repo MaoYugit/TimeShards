@@ -1,33 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAppStore } from '@/store/app'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAppStore } from "@/store/app";
 
-const route = useRoute()
-const router = useRouter()
-const appStore = useAppStore()
+const route = useRoute();
+const router = useRouter();
+const appStore = useAppStore();
 
 // 获取路由菜单
 const menuRoutes = computed(() => {
-  return router.options.routes.filter(r => {
-    return !r.meta?.hidden && r.children
-  })
-})
+  return router.options.routes.filter((r) => {
+    return !r.meta?.hidden && r.children;
+  });
+});
 
 // 当前激活的菜单
 const activeMenu = computed(() => {
-  const { path } = route
-  return path
-})
+  const { path } = route;
+  return path;
+});
 
 // 是否折叠
-const isCollapse = computed(() => appStore.sidebarCollapsed)
+const isCollapse = computed(() => appStore.sidebarCollapsed);
 
 // 处理菜单点击（移动端点击后关闭菜单）
 function handleMenuSelect() {
   if (appStore.isMobile) {
-    appStore.toggleSidebar()
+    appStore.toggleSidebar();
   }
 }
 </script>
@@ -39,7 +38,7 @@ function handleMenuSelect() {
   >
     <!-- Logo -->
     <div class="sidebar-logo">
-      <img src="@/assets/vue.svg" alt="Logo" class="logo-img" />
+      <img src="/logo.png" alt="Logo" class="logo-img" />
       <span v-show="!isCollapse" class="logo-title">TimeShards</span>
     </div>
 
@@ -57,7 +56,11 @@ function handleMenuSelect() {
           <!-- 单个菜单项（只有一个子路由） -->
           <el-menu-item
             v-if="route.children && route.children.length === 1"
-            :index="route.children[0].path.startsWith('/') ? route.children[0].path : `/${route.path}/${route.children[0].path}`"
+            :index="
+              route.children[0].path.startsWith('/')
+                ? route.children[0].path
+                : `/${route.path}/${route.children[0].path}`
+            "
           >
             <el-icon v-if="route.children[0].meta?.icon">
               <component :is="route.children[0].meta.icon" />
@@ -79,7 +82,11 @@ function handleMenuSelect() {
             <el-menu-item
               v-for="child in route.children"
               :key="child.path"
-              :index="child.path.startsWith('/') ? child.path : `/${route.path}/${child.path}`"
+              :index="
+                child.path.startsWith('/')
+                  ? child.path
+                  : `${route.path}/${child.path}`
+              "
             >
               <el-icon v-if="child.meta?.icon">
                 <component :is="child.meta.icon" />
@@ -154,7 +161,7 @@ function handleMenuSelect() {
   :deep(.el-menu-item),
   :deep(.el-sub-menu__title) {
     color: #bfcbd9;
-    
+
     &:hover {
       background-color: #263445;
     }
@@ -168,7 +175,7 @@ function handleMenuSelect() {
   :deep(.el-sub-menu .el-menu-item) {
     background-color: #1f2d3d !important;
     min-width: auto;
-    
+
     &:hover {
       background-color: #001528 !important;
     }
