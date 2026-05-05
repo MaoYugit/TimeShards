@@ -1,16 +1,41 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getBlogPostById } from '@/data/blog'
+import { getPostById, type BlogPost } from '@/api/blog'
 import { renderBlogMarkdown } from '@/utils/renderMarkdown'
 
 const route = useRoute()
 const router = useRouter()
 
-const post = computed(() => getBlogPostById(String(route.params.id ?? '')))
+const post = ref<BlogPost | null>(null)
+const loading = ref(false)
+const error = ref(false)
+
 const html = computed(() => (post.value ? renderBlogMarkdown(post.value.content) : ''))
 
 const baseTitle = 'TimeShards'
+
+// 获取文章详情
+async function fetchPost() {
+  const id = route.params.id as string
+  if (!id) {
+    error.value = true
+    return
+  }
+
+  loading.value = true
+  error.value = false
+  try {
+    const res = await getPostById(id)
+    post.value = res.data
+  } catch (err) {
+    console.error('获取文章详情失败:', err)
+    error.value = true
+    post.value = null
+  } finally {
+    loading.value = false
+  }
+}
 
 watch(
   () => post.value?.title,
@@ -20,7 +45,8 @@ watch(
   { immediate: true },
 )
 
-function formatDate(input: string) {
+function formatDate(input: string | null) {
+  if (!input) return '-'
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -29,11 +55,21 @@ function formatDate(input: string) {
     minute: '2-digit',
   }).format(new Date(input))
 }
+
+onMounted(() => {
+  fetchPost()
+})
 </script>
 
 <template>
   <main class="page-container">
-    <article v-if="post" class="detail card">
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading card">
+      <p>加载中...</p>
+    </div>
+
+    <!-- 文章内容 -->
+    <article v-else-if="post" class="detail card">
       <button type="button" class="btn-back" @click="router.push({ name: 'blog-list' })">← 返回列表</button>
 
       <header class="head">
@@ -42,6 +78,7 @@ function formatDate(input: string) {
           <span class="chip">{{ post.category }}</span>
           <span>发布：{{ formatDate(post.publishedAt) }}</span>
           <span>更新：{{ formatDate(post.updatedAt) }}</span>
+          <span>阅读：{{ post.viewCount }}</span>
         </div>
         <div class="tags">
           <span v-for="t in post.tags" :key="t" class="tag"># {{ t }}</span>
@@ -51,6 +88,7 @@ function formatDate(input: string) {
       <section class="markdown" v-html="html" />
     </article>
 
+    <!-- 错误状态 -->
     <section v-else class="empty card">
       <p>文章不存在或已被移除。</p>
       <button type="button" class="btn-back" @click="router.push({ name: 'blog-list' })">返回博客列表</button>
@@ -199,6 +237,12 @@ function formatDate(input: string) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  color: var(--text-secondary);
+}
+
+.loading {
+  padding: 40px;
+  text-align: center;
   color: var(--text-secondary);
 }
 </style>

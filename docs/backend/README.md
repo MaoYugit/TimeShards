@@ -1,5 +1,7 @@
 # TimeShards Backend 技术文档
 
+![image-20260505183815341](C:\Users\28745\AppData\Roaming\Typora\typora-user-images\image-20260505183815341.png)
+
 ## 目录
 
 - [项目概述](#项目概述)

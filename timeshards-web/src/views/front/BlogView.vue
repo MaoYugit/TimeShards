@@ -1,25 +1,58 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {
-  blogCategories,
-  blogPosts,
-  excerptFromMarkdown,
-  postMatchesQuery,
-  type BlogCategory,
-} from '@/data/blog'
+import { getPosts, type BlogPost, type BlogCategory, type QueryParams } from '@/api/blog'
 
 const router = useRouter()
 const activeCategory = ref<'全部' | BlogCategory>('全部')
 const searchQuery = ref('')
+const posts = ref<BlogPost[]>([])
+const loading = ref(false)
 
-const filteredPosts = computed(() => {
-  const byCat =
-    activeCategory.value === '全部' ? blogPosts : blogPosts.filter((p) => p.category === activeCategory.value)
-  return byCat.filter((p) => postMatchesQuery(p, searchQuery.value))
-})
+const categories: Array<'全部' | BlogCategory> = ['全部', '前端', '工程化', 'AI 开发', '随笔']
 
-function formatDate(input: string) {
+// 获取文章列表
+async function fetchPosts() {
+  loading.value = true
+  try {
+    const params: QueryParams & { status?: string } = {
+      page: 1,
+      pageSize: 50,
+      status: 'published',
+    }
+    if (activeCategory.value !== '全部') {
+      params.category = activeCategory.value
+    }
+    if (searchQuery.value.trim()) {
+      params.q = searchQuery.value.trim()
+    }
+    const res = await getPosts(params)
+    posts.value = res.data.items
+  } catch (error) {
+    console.error('获取文章列表失败:', error)
+    posts.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// 防抖搜索
+let searchTimer: ReturnType<typeof setTimeout>
+function onSearch() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    fetchPosts()
+  }, 300)
+}
+
+// 切换分类
+function onCategoryChange(cat: '全部' | BlogCategory) {
+  activeCategory.value = cat
+  fetchPosts()
+}
+
+function formatDate(input: string | null) {
+  if (!input) return '-'
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -27,9 +60,32 @@ function formatDate(input: string) {
   }).format(new Date(input))
 }
 
+function getSummary(post: BlogPost) {
+  if (post.summary) return post.summary
+  // 从 content 截取摘要
+  const plain = post.content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*]\([^)]+\)/g, ' ')
+    .replace(/\[[^\]]+]\([^)]+\)/g, '$1')
+    .replace(/[#>*_-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return plain.length > 132 ? `${plain.slice(0, 132).trimEnd()}...` : plain
+}
+
 function goDetail(id: string) {
   router.push({ name: 'blog-detail', params: { id } })
 }
+
+// 获取分类标签
+function getCategoryLabel(cat: string) {
+  return cat
+}
+
+onMounted(() => {
+  fetchPosts()
+})
 </script>
 
 <template>
@@ -43,13 +99,24 @@ function goDetail(id: string) {
       <div class="search-row" role="search">
         <div class="search-shell">
           <span class="search-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <path
                 d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
                 stroke="currentColor"
                 stroke-width="1.75"
               />
-              <path d="M16 16l4.2 4.2" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
+              <path
+                d="M16 16l4.2 4.2"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+              />
             </svg>
           </span>
           <input
@@ -60,6 +127,7 @@ function goDetail(id: string) {
             placeholder="标题、标签或正文关键词…"
             autocomplete="off"
             enterkeyhint="search"
+            @input="onSearch"
           />
           <label class="search-label" for="blog-search">搜索</label>
         </div>
@@ -67,29 +135,35 @@ function goDetail(id: string) {
 
       <nav class="category-nav card" aria-label="文章分类">
         <button
-          v-for="c in blogCategories"
+          v-for="c in categories"
           :key="c"
           type="button"
           class="cat-item"
           :class="{ active: c === activeCategory }"
-          @click="activeCategory = c"
+          @click="onCategoryChange(c)"
         >
-          {{ c }}
+          {{ getCategoryLabel(c) }}
         </button>
       </nav>
 
-      <section class="list" aria-label="文章列表">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading">
+        <p>加载中...</p>
+      </div>
+
+      <!-- 文章列表 -->
+      <section v-else class="list" aria-label="文章列表">
         <article
-          v-for="p in filteredPosts"
-          :key="p.id"
+          v-for="p in posts"
+          :key="p._id"
           class="post card"
           role="button"
           tabindex="0"
-          @click="goDetail(p.id)"
-          @keydown.enter.prevent="goDetail(p.id)"
+          @click="goDetail(p._id)"
+          @keydown.enter.prevent="goDetail(p._id)"
         >
           <h2 class="post-title">{{ p.title }}</h2>
-          <p class="post-excerpt">{{ excerptFromMarkdown(p.content, 132) }}</p>
+          <p class="post-excerpt">{{ getSummary(p) }}</p>
 
           <div class="meta-row">
             <span class="chip category">{{ p.category }}</span>
@@ -97,11 +171,11 @@ function goDetail(id: string) {
             <span class="meta">更新：{{ formatDate(p.updatedAt) }}</span>
           </div>
           <div class="tags">
-            <span v-for="t in p.tags" :key="`${p.id}-${t}`" class="chip tag"># {{ t }}</span>
+            <span v-for="t in p.tags" :key="`${p._id}-${t}`" class="chip tag"># {{ t }}</span>
           </div>
         </article>
 
-        <p v-if="!filteredPosts.length" class="empty">
+        <p v-if="!posts.length && !loading" class="empty">
           {{ searchQuery.trim() ? '没有匹配的文章，试试其它关键词。' : '该分类下暂无文章。' }}
         </p>
       </section>
@@ -117,7 +191,9 @@ function goDetail(id: string) {
   min-height: 100vh;
   min-height: 100dvh;
   padding: clamp(16px, 3vw, 28px);
-  padding-bottom: calc(clamp(16px, 3vw, 28px) + var(--dock-height) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(
+    clamp(16px, 3vw, 28px) + var(--dock-height) + env(safe-area-inset-bottom, 0px)
+  );
   box-sizing: border-box;
 }
 
@@ -321,5 +397,11 @@ function goDetail(id: string) {
   margin: 6px 0 0;
   color: var(--text-secondary);
   font-size: 14px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-secondary);
 }
 </style>
