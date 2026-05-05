@@ -12,6 +12,7 @@ import { BlogModule } from "./modules/blog/blog.module";
 import { GuestbookModule } from "./modules/guestbook/guestbook.module";
 import { PortfolioModule } from "./modules/portfolio/portfolio.module";
 import { ChatModule } from "./modules/chat/chat.module";
+import { AdminModule } from "./modules/admin/admin.module";
 
 @Module({
   imports: [
@@ -84,6 +85,9 @@ import { ChatModule } from "./modules/chat/chat.module";
 
     // Chat module
     ChatModule,
+
+    // Admin module
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

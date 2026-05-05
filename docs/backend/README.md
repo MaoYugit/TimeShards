@@ -521,16 +521,83 @@ $ curl -X POST http://localhost:3001/api/portfolio \
 
 **下一步**：Phase 6 — Chat 模块（Socket.IO 实时通信）
 
-### Phase 6：Chat 模块（待开发）
+### Phase 6：Chat 模块 ✅
 
-**计划内容**：
-- [ ] Socket.IO 网关
-- [ ] WebSocket 认证
-- [ ] 消息存储
-- [ ] 历史消息查询
+**完成日期**：2026-05-05
 
-### Phase 7：Admin 统计模块（待开发）
+**完成内容**：
+- [x] ChatMessage Schema 设计（聊天消息数据模型）
+- [x] SendMessageDto
+- [x] Chat Service（保存消息、历史消息）
+- [x] Chat Gateway（WebSocket 网关）
+- [x] Chat Controller（HTTP 接口）
+- [x] 在线用户管理
+- [x] 系统通知（加入/离开）
 
-**计划内容**：
-- [ ] 统计接口
-- [ ] 种子数据
+**关键文件**：
+- `src/modules/chat/chat.module.ts` — Chat 模块定义
+- `src/modules/chat/chat.controller.ts` — 聊天控制器
+- `src/modules/chat/chat.service.ts` — 聊天服务
+- `src/modules/chat/chat.gateway.ts` — WebSocket 网关
+- `src/modules/chat/schemas/chat-message.schema.ts` — 聊天消息 Schema
+- `src/modules/chat/dto/send-message.dto.ts` — 发送消息 DTO
+
+**API 端点**：
+| 类型 | 端点 | 认证 | 说明 |
+|------|------|------|------|
+| HTTP | GET `/api/chat/messages` | 否 | 获取历史消息 |
+| WS | `/chat` | 否 | WebSocket 实时聊天 |
+
+**下一步**：Phase 7 — Admin 统计模块
+
+### Phase 7：Admin 统计模块 ✅
+
+**完成日期**：2026-05-05
+
+**完成内容**：
+- [x] Admin 模块创建
+- [x] 仪表盘统计接口
+- [x] 种子数据脚本（自动创建默认管理员）
+
+**关键文件**：
+- `src/modules/admin/admin.module.ts` — Admin 模块定义
+- `src/modules/admin/admin.controller.ts` — 管理控制器
+- `src/modules/admin/admin.service.ts` — 管理服务
+- `src/database/seeds/admin.seed.ts` — 种子数据脚本
+
+**API 端点**：
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/api/admin/stats` | JWT | 获取仪表盘统计数据 |
+
+**统计数据结构**：
+```typescript
+{
+  postCount: number;          // 文章总数
+  publishedPostCount: number; // 已发布文章数
+  draftPostCount: number;     // 草稿文章数
+  guestbookCount: number;     // 留言总数
+  chatMessageCount: number;   // 聊天消息总数
+  portfolioCount: number;     // 作品总数
+}
+```
+
+**验证结果**：
+```bash
+$ curl http://localhost:3001/api/admin/stats \
+  -H "Authorization: Bearer $TOKEN"
+{
+  "code": 200,
+  "data": {
+    "postCount": 2,
+    "publishedPostCount": 2,
+    "draftPostCount": 0,
+    "guestbookCount": 1,
+    "chatMessageCount": 0,
+    "portfolioCount": 1
+  },
+  "message": "success"
+}
+```
+
+**🎉 所有 Phase 已完成！**
