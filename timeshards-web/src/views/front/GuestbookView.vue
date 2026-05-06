@@ -42,7 +42,8 @@ function formatTime(date: string) {
   }).format(new Date(date))
 }
 
-function normalizeWebsite(w: string) {
+function normalizeWebsite(w: string | undefined | null) {
+  if (!w) return ''
   const t = w.trim()
   if (!t) return ''
   if (/^https?:\/\//i.test(t)) return t

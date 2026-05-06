@@ -1,8 +1,25 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { getHomepageConfig, type HomepageConfig } from '@/api/siteConfig'
 
 const THEME_ATTR = 'data-theme'
 const isDark = ref(false)
+
+// 首页配置
+const siteConfig = ref<HomepageConfig>({
+  welcomeQuote: '「欢迎来到 TimeShards —— 愿这片小站能成为你浏览路上的一处歇脚点。」',
+  welcomeIntro: '这里是我的个人站点：记录作品集、博客与一些实验。界面偏简洁与玻璃拟态风格，希望阅读起来轻松一点。若你有想法或想交流技术，也欢迎留言互动。',
+})
+
+// 获取首页配置
+async function fetchSiteConfig() {
+  try {
+    const res = await getHomepageConfig()
+    siteConfig.value = res.data
+  } catch (error) {
+    console.error('获取首页配置失败:', error)
+  }
+}
 
 function readIsDark() {
   isDark.value = document.documentElement.getAttribute(THEME_ATTR) === 'dark'
@@ -14,6 +31,7 @@ let onMqlChange: ((e: MediaQueryListEvent) => void) | null = null
 
 onMounted(() => {
   readIsDark()
+  fetchSiteConfig()
 
   // React to explicit theme toggles (html[data-theme])
   mo = new MutationObserver(() => readIsDark())
@@ -46,11 +64,11 @@ onBeforeUnmount(() => {
   nowTimer = null
 })
 
-const snakeSrc = computed(() =>
-  isDark.value
+const snakeSrc = computed(() => {
+  return isDark.value
     ? 'https://raw.githubusercontent.com/MaoYugit/MaoYugit/main/dist/github-contribution-grid-snake-dark.svg'
-    : 'https://raw.githubusercontent.com/MaoYugit/MaoYugit/main/dist/github-contribution-grid-snake.svg',
-)
+    : 'https://raw.githubusercontent.com/MaoYugit/MaoYugit/main/dist/github-contribution-grid-snake.svg'
+})
 
 // Time + calendar
 const now = ref(new Date())
@@ -148,10 +166,8 @@ const calendarCells = computed<CalendarCell[]>(() => {
           </div>
 
           <article class="welcome-card" aria-label="欢迎与介绍">
-            <p class="welcome-quote">「欢迎来到 TimeShards —— 愿这片小站能成为你浏览路上的一处歇脚点。」</p>
-            <p class="welcome-intro">
-              这里是我的个人站点：记录作品集、博客与一些实验。界面偏简洁与玻璃拟态风格，希望阅读起来轻松一点。若你有想法或想交流技术，也欢迎留言互动。
-            </p>
+            <p class="welcome-quote">{{ siteConfig.welcomeQuote }}</p>
+            <p class="welcome-intro">{{ siteConfig.welcomeIntro }}</p>
           </article>
         </div>
 

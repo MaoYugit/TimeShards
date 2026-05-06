@@ -13,6 +13,7 @@ import { GuestbookModule } from "./modules/guestbook/guestbook.module";
 import { PortfolioModule } from "./modules/portfolio/portfolio.module";
 import { ChatModule } from "./modules/chat/chat.module";
 import { AdminModule } from "./modules/admin/admin.module";
+import { SiteConfigModule } from "./modules/site-config/site-config.module";
 
 @Module({
   imports: [
@@ -88,6 +89,9 @@ import { AdminModule } from "./modules/admin/admin.module";
 
     // Admin module
     AdminModule,
+
+    // Site Config module
+    SiteConfigModule,
   ],
   controllers: [AppController],
   providers: [
