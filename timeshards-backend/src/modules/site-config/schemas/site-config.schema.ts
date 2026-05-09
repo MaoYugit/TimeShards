@@ -28,6 +28,3 @@ export class SiteConfig {
 }
 
 export const SiteConfigSchema = SchemaFactory.createForClass(SiteConfig);
-
-// 创建索引
-SiteConfigSchema.index({ key: 1 }, { unique: true });

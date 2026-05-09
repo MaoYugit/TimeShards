@@ -38,6 +38,3 @@ export class Admin {
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);
-
-// 创建索引
-AdminSchema.index({ username: 1 }, { unique: true });
