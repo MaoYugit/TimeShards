@@ -7,7 +7,7 @@ export interface BlogPost {
   publishedAt: string | null
   updatedAt: string
   viewCount: number
-  category: BlogCategory
+  category: string
   tags: string[]
   coverImage: string
   content: string
@@ -15,14 +15,14 @@ export interface BlogPost {
   createdAt: string
 }
 
-export type BlogCategory = '前端' | '工程化' | 'AI 开发' | '随笔'
+export type BlogCategory = string
 
 export interface CreatePostDto {
   title: string
   slug?: string
   summary?: string
   status?: 'draft' | 'published'
-  category: BlogCategory
+  category: string
   tags?: string[]
   coverImage?: string
   content: string
@@ -33,7 +33,7 @@ export interface UpdatePostDto {
   slug?: string
   summary?: string
   status?: 'draft' | 'published'
-  category?: BlogCategory
+  category?: string
   tags?: string[]
   coverImage?: string
   content?: string
@@ -42,9 +42,18 @@ export interface UpdatePostDto {
 export interface QueryPostDto {
   page?: number
   pageSize?: number
-  category?: BlogCategory
+  category?: string
   status?: 'draft' | 'published'
   q?: string
+}
+
+export interface BlogCategoryItem {
+  _id: string
+  name: string
+  slug: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface PaginatedResponse<T> {

@@ -4,13 +4,6 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export type BlogPostDocument = BlogPost & Document;
 
-export enum BlogCategory {
-  FRONTEND = "前端",
-  ENGINEERING = "工程化",
-  AI_DEVELOPMENT = "AI 开发",
-  ESSAY = "随笔",
-}
-
 export enum BlogStatus {
   DRAFT = "draft",
   PUBLISHED = "published",
@@ -59,13 +52,12 @@ export class BlogPost {
   @ApiProperty({ description: "阅读量", example: 0 })
   viewCount: number;
 
-  @Prop({ required: true, type: String, enum: BlogCategory })
+  @Prop({ required: true, type: String, trim: true })
   @ApiProperty({
     description: "分类",
-    enum: BlogCategory,
-    example: BlogCategory.FRONTEND,
+    example: "前端",
   })
-  category: BlogCategory;
+  category: string;
 
   @Prop({ type: [String], default: [] })
   @ApiProperty({ description: "标签", example: ["Vue", "TypeScript"] })

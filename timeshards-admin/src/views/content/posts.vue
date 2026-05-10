@@ -3,6 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getPostsAdmin, deletePost } from '@/api/blog'
+import { getCategories } from '@/api/blogCategory'
 import type { BlogPost, QueryPostDto } from '@/types/blog'
 
 const router = useRouter()
@@ -22,7 +23,7 @@ const queryParams = reactive<QueryPostDto>({
 })
 
 // 分类选项
-const categoryOptions = ['前端', '工程化', 'AI 开发', '随笔']
+const categoryOptions = ref<string[]>([])
 
 // 状态选项
 const statusOptions = [
@@ -124,7 +125,18 @@ function statusLabel(status: string) {
   return status === 'published' ? '已发布' : '草稿'
 }
 
+// 获取分类列表
+async function fetchCategories() {
+  try {
+    const res = await getCategories()
+    categoryOptions.value = res.data.map((c: any) => c.name)
+  } catch (error) {
+    console.error('获取分类失败:', error)
+  }
+}
+
 onMounted(() => {
+  fetchCategories()
   fetchPosts()
 })
 </script>

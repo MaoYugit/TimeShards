@@ -7,7 +7,7 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
-import { BlogCategory, BlogStatus } from "../schemas/blog-post.schema";
+import { BlogStatus } from "../schemas/blog-post.schema";
 
 export class UpdatePostDto {
   @ApiPropertyOptional({
@@ -51,11 +51,10 @@ export class UpdatePostDto {
 
   @ApiPropertyOptional({
     description: "分类",
-    enum: BlogCategory,
   })
   @IsOptional()
-  @IsEnum(BlogCategory)
-  category?: BlogCategory;
+  @IsString()
+  category?: string;
 
   @ApiPropertyOptional({
     description: "标签",

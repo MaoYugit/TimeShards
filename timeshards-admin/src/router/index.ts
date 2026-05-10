@@ -47,6 +47,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '文章管理', icon: 'Notebook' }
       },
       {
+        path: 'categories',
+        name: 'Categories',
+        component: () => import('@/views/content/categories.vue'),
+        meta: { title: '分类管理', icon: 'Files' }
+      },
+      {
         path: 'posts/create',
         name: 'PostCreate',
         component: () => import('@/views/content/post-editor.vue'),

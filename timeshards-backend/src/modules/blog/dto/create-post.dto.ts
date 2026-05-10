@@ -8,7 +8,7 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
-import { BlogCategory, BlogStatus } from "../schemas/blog-post.schema";
+import { BlogStatus } from "../schemas/blog-post.schema";
 
 export class CreatePostDto {
   @ApiProperty({
@@ -53,11 +53,11 @@ export class CreatePostDto {
 
   @ApiProperty({
     description: "分类",
-    enum: BlogCategory,
-    example: BlogCategory.FRONTEND,
+    example: "前端",
   })
-  @IsEnum(BlogCategory)
-  category: BlogCategory;
+  @IsString()
+  @IsNotEmpty()
+  category: string;
 
   @ApiPropertyOptional({
     description: "标签",

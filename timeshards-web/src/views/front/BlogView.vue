@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getPosts, type BlogPost, type BlogCategory, type QueryParams } from '@/api/blog'
+import { getPosts, getCategories, type BlogPost, type QueryParams } from '@/api/blog'
 
 const router = useRouter()
-const activeCategory = ref<'全部' | BlogCategory>('全部')
+const activeCategory = ref<string>('全部')
 const searchQuery = ref('')
 const posts = ref<BlogPost[]>([])
 const loading = ref(false)
 
-const categories: Array<'全部' | BlogCategory> = ['全部', '前端', '工程化', 'AI 开发', '随笔']
+const categories = ref<string[]>(['全部'])
 
 // 获取文章列表
 async function fetchPosts() {
@@ -46,7 +46,7 @@ function onSearch() {
 }
 
 // 切换分类
-function onCategoryChange(cat: '全部' | BlogCategory) {
+function onCategoryChange(cat: string) {
   activeCategory.value = cat
   fetchPosts()
 }
@@ -83,7 +83,18 @@ function getCategoryLabel(cat: string) {
   return cat
 }
 
+// 获取分类列表
+async function fetchCategoryList() {
+  try {
+    const res = await getCategories()
+    categories.value = ['全部', ...res.data]
+  } catch (error) {
+    console.error('获取分类失败:', error)
+  }
+}
+
 onMounted(() => {
+  fetchCategoryList()
   fetchPosts()
 })
 </script>

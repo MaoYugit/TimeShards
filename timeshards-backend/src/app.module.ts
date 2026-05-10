@@ -14,6 +14,7 @@ import { PortfolioModule } from "./modules/portfolio/portfolio.module";
 import { ChatModule } from "./modules/chat/chat.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { SiteConfigModule } from "./modules/site-config/site-config.module";
+import { BlogCategoryModule } from "./modules/blog-category/blog-category.module";
 
 @Module({
   imports: [
@@ -92,6 +93,9 @@ import { SiteConfigModule } from "./modules/site-config/site-config.module";
 
     // Site Config module
     SiteConfigModule,
+
+    // Blog Category module
+    BlogCategoryModule,
   ],
   controllers: [AppController],
   providers: [

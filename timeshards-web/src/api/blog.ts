@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-export type BlogCategory = '前端' | '工程化' | 'AI 开发' | '随笔'
+export type BlogCategory = string
 
 export interface BlogPost {
   _id: string
@@ -11,7 +11,7 @@ export interface BlogPost {
   publishedAt: string | null
   updatedAt: string
   viewCount: number
-  category: BlogCategory
+  category: string
   tags: string[]
   coverImage: string
   content: string
@@ -36,7 +36,7 @@ export interface ApiResponse<T> {
 export interface QueryParams {
   page?: number
   pageSize?: number
-  category?: BlogCategory
+  category?: string
   q?: string
 }
 

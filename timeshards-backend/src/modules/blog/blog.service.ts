@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
   Logger,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
@@ -15,6 +16,7 @@ import { CreatePostDto } from "./dto/create-post.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { QueryPostDto } from "./dto/query-post.dto";
 import { PaginatedResponseDto } from "../../common/dto/pagination.dto";
+import { BlogCategoryService } from "../blog-category/blog-category.service";
 
 @Injectable()
 export class BlogService {
@@ -22,6 +24,7 @@ export class BlogService {
 
   constructor(
     @InjectModel(BlogPost.name) private blogPostModel: Model<BlogPostDocument>,
+    private readonly blogCategoryService: BlogCategoryService,
   ) {}
 
   /**
@@ -42,6 +45,9 @@ export class BlogService {
     if (existingPost) {
       throw new ConflictException(`Slug '${slug}' 已存在`);
     }
+
+    // 验证分类是否存在
+    await this.validateCategory(createPostDto.category);
 
     // 自动生成摘要
     let summary = createPostDto.summary;
@@ -213,6 +219,11 @@ export class BlogService {
       }
     }
 
+    // 验证分类是否存在
+    if (updatePostDto.category) {
+      await this.validateCategory(updatePostDto.category);
+    }
+
     // 如果状态从草稿变为发布，设置发布时间
     let publishedAt = existingPost.publishedAt;
     if (
@@ -266,8 +277,19 @@ export class BlogService {
    * 获取所有分类
    */
   async getCategories(): Promise<string[]> {
-    const categories = await this.blogPostModel.distinct("category").exec();
-    return categories;
+    const categories = await this.blogCategoryService.findAll();
+    return categories.map((c) => c.name);
+  }
+
+  /**
+   * 验证分类是否存在
+   */
+  private async validateCategory(categoryName: string): Promise<void> {
+    const categories = await this.blogCategoryService.findAll();
+    const validNames = categories.map((c) => c.name);
+    if (!validNames.includes(categoryName)) {
+      throw new BadRequestException(`分类 '${categoryName}' 不存在`);
+    }
   }
 
   /**

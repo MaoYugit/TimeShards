@@ -1,16 +1,15 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { IsOptional, IsString, IsEnum } from "class-validator";
-import { BlogCategory, BlogStatus } from "../schemas/blog-post.schema";
+import { BlogStatus } from "../schemas/blog-post.schema";
 import { PaginationDto } from "../../../common/dto/pagination.dto";
 
 export class QueryPostDto extends PaginationDto {
   @ApiPropertyOptional({
     description: "分类筛选",
-    enum: BlogCategory,
   })
   @IsOptional()
-  @IsEnum(BlogCategory)
-  category?: BlogCategory;
+  @IsString()
+  category?: string;
 
   @ApiPropertyOptional({
     description: "状态筛选",

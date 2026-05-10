@@ -5,7 +5,8 @@ import { ElMessage } from 'element-plus'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { getPostById, createPost, updatePost } from '@/api/blog'
-import type { CreatePostDto, UpdatePostDto, BlogCategory } from '@/types/blog'
+import { getCategories } from '@/api/blogCategory'
+import type { CreatePostDto, UpdatePostDto } from '@/types/blog'
 
 const router = useRouter()
 const route = useRoute()
@@ -19,7 +20,7 @@ const form = reactive({
   title: '',
   slug: '',
   summary: '',
-  category: '' as BlogCategory | '',
+  category: '' as string,
   tags: [] as string[],
   content: '',
   status: 'draft' as 'draft' | 'published'
@@ -33,7 +34,7 @@ const loading = ref(false)
 const saving = ref(false)
 
 // 分类选项
-const categoryOptions: BlogCategory[] = ['前端', '工程化', 'AI 开发', '随笔']
+const categoryOptions = ref<string[]>([])
 
 // 表单规则
 const rules = {
@@ -95,7 +96,7 @@ async function handleSave(status: 'draft' | 'published') {
       title: form.title,
       slug: form.slug || undefined,
       summary: form.summary || undefined,
-      category: form.category as BlogCategory,
+      category: form.category,
       tags: form.tags,
       content: form.content,
       status
@@ -122,7 +123,18 @@ function handleCancel() {
   router.back()
 }
 
+// 获取分类列表
+async function fetchCategories() {
+  try {
+    const res = await getCategories()
+    categoryOptions.value = res.data.map((c: any) => c.name)
+  } catch (error) {
+    console.error('获取分类失败:', error)
+  }
+}
+
 onMounted(() => {
+  fetchCategories()
   fetchPost()
 })
 </script>
